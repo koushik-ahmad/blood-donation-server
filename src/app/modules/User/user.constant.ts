@@ -1,6 +1,5 @@
 export const userSearchAbleFields: string[] = [
   "email",
-  "city",
   "location",
   "name",
 ]; // only for search term
@@ -12,5 +11,4 @@ export const userFilterableFields: string[] = [
   "name",
   "location",
   "bloodType",
-  "city",
 ]; // for all filtering

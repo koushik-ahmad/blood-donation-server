@@ -3,16 +3,27 @@ import auth from "../../middlewares/auth";
 import { profileController } from "./profile.controller";
 import validateRequest from "../../middlewares/validateRequest";
 import { profileValidationSchema } from "./profile.validation";
+import { UserRole } from "@prisma/client";
 
 const router = express.Router();
 
-router.get("/api/my-profile", auth(), profileController.getMyProfile);
+router.get(
+  "/my-profile",
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.USER),
+  profileController.getMyProfile,
+);
 
 router.put(
-  "/api/my-profile",
-  auth(),
+  "/update-my-profile",
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.USER),
   validateRequest(profileValidationSchema.updateProfileSchema),
   profileController.updateMyProfile,
+);
+
+router.post(
+  "/update-profile-picture",
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.USER),
+  profileController.updateUserProfilePicture,
 );
 
 export const profileRoutes = router;

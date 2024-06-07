@@ -1,3 +1,4 @@
+import { UserRole } from "@prisma/client";
 import { IGenericErrorMessage } from "../errors/error";
 
 export type IGenericResponse<T> = {
@@ -16,6 +17,10 @@ export type IGenericErrorResponse = {
 };
 
 export type IAuthUser = {
-  userId: string;
+  id: string;
+  name: string;
   email: string;
+  role: UserRole;
+  iat: number;
+  exp: number;
 } | null;

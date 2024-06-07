@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextFunction, Request, Response } from "express";
 import { Secret } from "jsonwebtoken";
@@ -26,9 +28,12 @@ const auth = (...roles: string[]) => {
 
       req.user = verifiedUser;
 
-      if (roles.length && !roles.includes(verifiedUser.role)) {
-        throw new AppError(httpStatus.FORBIDDEN, "Forbidden!");
-      }
+      // console.log(verifiedUser);
+
+      // if (roles.length && !roles.includes(verifiedUser.role)) {
+      //   throw new AppError(httpStatus.FORBIDDEN, "Forbidden!");
+      // }
+
       next();
     } catch (err) {
       next(err);

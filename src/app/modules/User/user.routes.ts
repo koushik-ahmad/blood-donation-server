@@ -13,7 +13,7 @@ router.get("/donor-list/:id", userController.getByIdFromDB);
 
 //Delete User
 router.put(
-  "/donors/:id",
+  "/donor/:id",
   auth(UserRole.ADMIN),
   userController.deleteUserController,
 );

@@ -50,7 +50,36 @@ const updateMyProfile = async (token: string, userData: any) => {
   return result;
 };
 
+// update user profile picture
+const updateUserProfilePicture = async (data: any) => {
+  const result = await prisma.user.update({
+    where: {
+      id: data.id,
+    },
+    data: {
+      profilePicture: data.profilePicture,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      needPasswordChange: true,
+      role: true,
+      bloodType: true,
+      location: true,
+      profilePicture: true,
+      totalDonations: true,
+      availability: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+  return result;
+};
+
 export const profileService = {
   getMyProfile,
   updateMyProfile,
+  updateUserProfilePicture,
 };
