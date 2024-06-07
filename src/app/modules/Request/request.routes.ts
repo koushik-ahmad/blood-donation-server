@@ -1,8 +1,8 @@
 import express from "express";
-import { donationController } from "./donation.controller";
+import { donationController } from "./request.controller";
 import auth from "../../middlewares/auth";
 import validateRequest from "../../middlewares/validateRequest";
-import { statusValidationSchema } from "./donation.validation";
+import { statusValidationSchema } from "./request.validation";
 
 const router = express.Router();
 
@@ -28,4 +28,4 @@ router.put(
   donationController.updateRequestStatus,
 );
 
-export const donationRoutes = router;
+export const requestRoutes = router;

@@ -2,8 +2,8 @@
 /* eslint-disable no-self-assign */
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { donorSearchAbleFields } from "./donation.constants";
-import { DonorRequestData, IFilterRequest } from "./donation.type";
+import { donorSearchAbleFields } from "./request.constants";
+import { DonorRequestData, IFilterRequest } from "./request.type";
 import { paginationHelper } from "../../../helpers/paginationHelpers";
 import { IPaginationOptions } from "../../interfaces/IPaginationOptions";
 import { jwtHelpers } from "../../../helpers/jwtHelpers";

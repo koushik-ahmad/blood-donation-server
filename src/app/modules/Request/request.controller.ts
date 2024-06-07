@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import catchAsync from "../../../shared/catchAsync";
-import { donationService } from "./donation.service";
+import { donationService } from "./request.service";
 import sendResponse from "../../../shared/sendResponse";
 import httpStatus from "http-status";
 import pick from "../../../shared/pick";
-import { donorFilterableFields } from "./donation.constants";
+import { donorFilterableFields } from "./request.constants";
 
 const getAllDonor = catchAsync(async (req: Request, res: Response) => {
   // console.log(req.query)

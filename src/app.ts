@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/", (req: Request, res: Response) => {
   res.send({
     success: true,
-    message: "Blood Donation Server...",
+    message: "Blood Donation Server is Running...",
   });
 });
 
