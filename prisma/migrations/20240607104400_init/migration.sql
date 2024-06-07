@@ -20,7 +20,6 @@ CREATE TABLE "users" (
     "role" "UserRole" NOT NULL DEFAULT 'USER',
     "bloodType" "BloodGroup" NOT NULL,
     "location" TEXT NOT NULL,
-    "city" TEXT,
     "profilePicture" TEXT,
     "totalDonations" INTEGER NOT NULL DEFAULT 0,
     "availability" BOOLEAN NOT NULL DEFAULT true,

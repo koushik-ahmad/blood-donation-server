@@ -33,16 +33,6 @@ const getByIdFromDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const createUser = catchAsync(async (req: Request, res: Response) => {
-  const result = await userServices.createUser(req.body);
-
-  sendResponse(res, {
-    statusCode: httpStatus.CREATED,
-    success: true,
-    message: "User registered successfully",
-    data: result,
-  });
-});
 
 //Delete user
 const deleteUserController = catchAsync(async (req: Request, res: Response) => {
@@ -72,7 +62,6 @@ const updateUserByAdmin = catchAsync(async (req: Request, res: Response) => {
 export const userController = {
   getAllFromDB,
   getByIdFromDB,
-  createUser,
   deleteUserController,
   updateUserByAdmin,
 };

@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as bcrypt from "bcrypt";
 import prisma from "../../../shared/prisma";
 import { IPaginationOptions } from "../../interfaces/IPaginationOptions";
 import { paginationHelper } from "../../../helpers/paginationHelpers";
 import { Prisma, User, UserStatus } from "@prisma/client";
 import { userSearchAbleFields } from "./user.constant";
-import ApiError from "../../errors/ApiError";
 import httpStatus from "http-status";
 import { IUserFilterRequest } from "./user.interface";
 import { IGenericResponse } from "../../interfaces/common";
+import AppError from "../../errors/ApiError";
 
 const getAllFromDB = async (
   filters: IUserFilterRequest,
@@ -107,69 +106,6 @@ const getByIdFromDB = async (id: string): Promise<User | null> => {
   return result;
 };
 
-//Create user
-const createUser = async (data: any) => {
-  const hashedPassword = await bcrypt.hash(data.password, 12);
-
-  const userData = {
-    name: data.name,
-    email: data.email,
-    password: hashedPassword,
-    role: data.role || "USER",
-    bloodType: data.bloodType,
-    location: data.location,
-    city: data.city,
-    totalDonations: data.totalDonations,
-    availability: data.availability,
-    status: data.status,
-  };
-
-  const userInfo = await prisma.user.findFirst({
-    where: {
-      email: data.email,
-    },
-  });
-
-  if (userInfo) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "User already exists");
-  }
-
-  const result = prisma.$transaction(async (transactionClient) => {
-    const createdUser = await transactionClient.user.create({
-      data: userData,
-    });
-
-    const createdUserProfile = await transactionClient.userProfile.create({
-      data: {
-        userId: createdUser.id,
-        age: data.age,
-        bio: data.bio,
-        lastDonationDate: data.lastDonationDate,
-      },
-    });
-    // Fetch user details
-    const userDetails = await transactionClient.user.findUnique({
-      where: {
-        id: createdUser.id,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        bloodType: true,
-        location: true,
-        availability: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    return { ...userDetails, userProfile: createdUserProfile };
-  });
-
-  return result;
-};
-
 //Delete User
 const deleteUser = async (id: string) => {
   const userData = await prisma.user.findUnique({
@@ -179,7 +115,7 @@ const deleteUser = async (id: string) => {
   });
 
   if (!userData) {
-    throw new ApiError(httpStatus.NOT_FOUND, "User is not found");
+    throw new AppError(httpStatus.NOT_FOUND, "User is not found");
   }
 
   const deletedUser = await prisma.user.update({
@@ -206,7 +142,7 @@ const updateUserByAdmin = async (data: any) => {
   });
 
   if (!user) {
-    throw new ApiError(httpStatus.NOT_FOUND, "User is not found");
+    throw new AppError(httpStatus.NOT_FOUND, "User is not found");
   }
 
   const userData = {
@@ -227,7 +163,6 @@ const updateUserByAdmin = async (data: any) => {
 export const userServices = {
   getAllFromDB,
   getByIdFromDB,
-  createUser,
   deleteUser,
   updateUserByAdmin,
 };

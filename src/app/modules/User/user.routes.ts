@@ -8,13 +8,8 @@ import auth from "../../middlewares/auth";
 const router = express.Router();
 
 router.get("/donor-list", userController.getAllFromDB);
-router.get("/donor-list/:id", userController.getByIdFromDB);
 
-router.post(
-  "/register",
-  validateRequest(userValidation.createUser),
-  userController.createUser,
-);
+router.get("/donor-list/:id", userController.getByIdFromDB);
 
 //Delete User
 router.put(

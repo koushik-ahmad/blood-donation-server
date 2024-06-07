@@ -7,6 +7,8 @@ import { User, UserProfile } from "@prisma/client";
 import { jwtHelpers } from "../../../helpers/jwtHelpers";
 import config from "../../../config";
 import { Secret } from "jsonwebtoken";
+import httpStatus from "http-status";
+import AppError from "../../errors/ApiError";
 
 const registerUser = async (userData: any) => {
   let createdUser: User | null = null;
@@ -14,14 +16,28 @@ const registerUser = async (userData: any) => {
 
   const hashedPassword: string = await bcrypt.hash(userData.password, 12);
 
+  const userInfo = await prisma.user.findFirst({
+    where: {
+      email: userData.email,
+    },
+  });
+
+  if (userInfo) {
+    throw new AppError(httpStatus.BAD_REQUEST, "User already exists");
+  }
+
   const result = await prisma.$transaction(async (tx) => {
     createdUser = await tx.user.create({
       data: {
         name: userData.name,
         email: userData.email,
         password: hashedPassword,
+        role: userData.role || "USER",
         bloodType: userData.bloodType,
         location: userData.location,
+        totalDonations: userData.totalDonations,
+        availability: userData.availability,
+        status: userData.status,
       },
     });
 
