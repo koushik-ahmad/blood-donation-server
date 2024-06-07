@@ -11,6 +11,11 @@ const updateProfileSchema = z.object({
       required_error: "age field is required.",
     })
     .optional(),
+  lastDonationDate: z
+    .string({
+      required_error: "donation date is required.",
+    })
+    .optional(),
 });
 
 export const profileValidationSchema = {

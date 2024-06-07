@@ -20,8 +20,8 @@ router.put(
   profileController.updateMyProfile,
 );
 
-router.post(
-  "/update-profile-picture",
+router.put(
+  "/update-profile-photo",
   auth(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.USER),
   profileController.updateUserProfilePicture,
 );
