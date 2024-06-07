@@ -1,168 +1,114 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable no-self-assign */
-/* eslint-disable no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { donorSearchAbleFields } from "./request.constants";
-import { DonorRequestData, IFilterRequest } from "./request.type";
-import { paginationHelper } from "../../../helpers/paginationHelpers";
-import { IPaginationOptions } from "../../interfaces/IPaginationOptions";
-import { jwtHelpers } from "../../../helpers/jwtHelpers";
-import { Secret } from "jsonwebtoken";
-import { Prisma } from "@prisma/client";
+import httpStatus from "http-status";
 import prisma from "../../../shared/prisma";
-import config from "../../../config";
+import { RequestStatus } from "@prisma/client";
+import ApiError from "../../errors/ApiError";
 
-const getAllDonor = async (
-  params: IFilterRequest,
-  options: IPaginationOptions,
-) => {
-  const { page, limit, skip } = paginationHelper.calculatePagination(options);
-
-  const { searchTerm, ...filterData } = params;
-  const andConditions: Prisma.UserWhereInput[] = [];
-
-  //console.log(filterData);
-  if (params.searchTerm) {
-    andConditions.push({
-      OR: donorSearchAbleFields.map((field) => ({
-        [field]: {
-          contains: params.searchTerm,
-          mode: "insensitive",
-        },
-      })),
-    });
-  }
-
-  if (Object.keys(filterData).length > 0) {
-    andConditions.push({
-      AND: Object.keys(filterData).map((key) => ({
-        [key]: {
-          equals: (filterData as any)[key],
-        },
-      })),
-    });
-  }
-
-  const whereConditions: Prisma.UserWhereInput = {
-    AND: andConditions,
-  };
-
-  const result = await prisma.user.findMany({
-    where: whereConditions,
-    skip,
-    take: limit,
-    orderBy:
-      options.sortBy && options.sortOrder
-        ? {
-            [options.sortBy]: options.sortOrder,
-          }
-        : {
-            createdAt: "desc",
-          },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      bloodType: true,
-      location: true,
-      availability: true,
-      createdAt: true,
-      updatedAt: true,
-      userProfile: true,
+const createRequest = async (user: any, data: any) => {
+  const userEmail = user.email;
+  const requester = await prisma.user.findUnique({
+    where: {
+      email: userEmail,
     },
   });
 
-  const total = await prisma.user.count({
-    where: whereConditions,
+  if (!requester) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const donorId = data.donorId;
+  const requesterId = requester.id;
+  const existingDonor = await prisma.user.findUnique({
+    where: {
+      id: donorId,
+    },
   });
 
-  return {
-    meta: {
-      page,
-      limit,
-      total,
-    },
-
-    data: result,
-  };
-};
-
-// donation request
-const createDonationRequest = async (token: string, data: DonorRequestData) => {
-  try {
-    const verifiedUser = jwtHelpers.verifyToken(
-      token,
-      config.jwt.jwt_secret as Secret,
-    );
-
-    if (!verifiedUser || verifiedUser.id) {
-      throw new Error("Invalid token or user not found");
-    }
-
-    // const requesterId = verifiedUser.id;
-    const tokenId = verifiedUser.userId;
-
-    const donor = await prisma.user.findUnique({
-      where: {
-        id: data.donorId,
-      },
-      include: {
-        userProfile: true,
-      },
-    });
-
-    if (!donor) {
-      throw new Error("Donor not found");
-    }
-
-    const result = await prisma.request.create({
-      data: {
-        donorId: data.donorId,
-        requesterId: tokenId,
-        phoneNumber: data.phoneNumber,
-        dateOfDonation: data.dateOfDonation,
-        hospitalName: data.hospitalName,
-        hospitalAddress: data.hospitalAddress,
-        reason: data.reason,
-      },
-    });
-
-    // Response object
-    const responseData = {
-      id: result.id,
-      donorId: result.donorId,
-      requesterId: result.requesterId,
-      phoneNumber: result.phoneNumber,
-      dateOfDonation: result.dateOfDonation,
-      hospitalName: result.hospitalName,
-      hospitalAddress: result.hospitalAddress,
-      reason: result.reason,
-      requestStatus: result.requestStatus,
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-      donor: {
-        id: donor.id,
-        name: donor.name,
-        email: donor.email,
-        bloodType: donor.bloodType,
-        location: donor.location,
-        availability: donor.availability,
-        createdAt: donor.createdAt,
-        updatedAt: donor.updatedAt,
-        userProfile: donor.userProfile,
-      },
-    };
-
-    return responseData;
-  } catch (error) {
-    throw new Error(`error: ${error}`);
+  if (!existingDonor) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Donor not found");
   }
-};
 
-const getAllDonationRequest = async () => {
-  const result = await prisma.request.findMany({
+  if (existingDonor.status !== "ACTIVE") {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Donor is inactive");
+  }
+
+  const requestData = {
+    donorId: data.donorId,
+    requesterId,
+    bloodType: data.bloodType,
+    phoneNumber: data.phoneNumber,
+    dateOfDonation: data.dateOfDonation,
+    hospitalName: data.hospitalName,
+    hospitalAddress: data.hospitalAddress,
+    reason: data.reason,
+  };
+
+  const result = await prisma.request.create({
+    data: requestData,
     include: {
-      requester: {
+      donor: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          bloodType: true,
+          location: true,
+          availability: true,
+          createdAt: true,
+          updatedAt: true,
+          userProfile: {
+            select: {
+              id: true,
+              userId: true,
+              bio: true,
+              age: true,
+              lastDonationDate: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return result;
+};
+
+const myDonationRequests = async (user: any) => {
+  // const userEmail = user.email;
+  const loggedInUserId = user.userId;
+  const userId = await prisma.user.findUnique({
+    where: {
+      id: loggedInUserId,
+    },
+  });
+
+  if (!userId) {
+    return httpStatus.NOT_FOUND, "User not found";
+  }
+
+  const donorId = userId.id;
+
+  const result = await prisma.request.findMany({
+    where: {
+      donorId,
+    },
+  });
+
+  // Fetch requester information for each request
+  const requestsWithRequester = await Promise.all(
+    result.map(async (request) => {
+      if (!request.requesterId) {
+        return {
+          ...request,
+          requester: null,
+        };
+      }
+      const requester = await prisma.user.findUnique({
+        where: {
+          id: request.requesterId,
+        },
         select: {
           id: true,
           name: true,
@@ -171,30 +117,237 @@ const getAllDonationRequest = async () => {
           bloodType: true,
           availability: true,
         },
-      },
-    },
-  });
-  return result;
+      });
+
+      return {
+        ...request,
+        requester: requester || null,
+      };
+    }),
+  );
+
+  return requestsWithRequester;
 };
 
-const updateRequestStatus = async (id: string, data: any) => {
-  // console.log(data);
+//Donation Request made by me
+const donationRequestsMadeByMe = async (user: any) => {
+  const loggedInUserId = user.userId;
+  const requestUser = await prisma.user.findUnique({
+    where: {
+      id: loggedInUserId,
+    },
+  });
 
-  const result = await prisma.request.update({
+  if (!requestUser) {
+    return httpStatus.NOT_FOUND, "User not found";
+  }
+
+  const requesterId = requestUser.id;
+
+  const result = await prisma.request.findMany({
+    where: {
+      requesterId,
+    },
+  });
+
+  // Fetch Donor information for each request
+  const myRequestsForDonor = await Promise.all(
+    result.map(async (request) => {
+      if (!request.donorId) {
+        return {
+          ...request,
+          donor: null,
+        };
+      }
+      const bloodDonor = await prisma.user.findUnique({
+        where: {
+          id: request.donorId,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          location: true,
+          bloodType: true,
+          availability: true,
+        },
+      });
+
+      return {
+        ...request,
+        donor: bloodDonor || null,
+      };
+    }),
+  );
+
+  return myRequestsForDonor;
+};
+
+const updateRequest = async (
+  id: string,
+  user: any,
+  statusObject: { status: RequestStatus },
+) => {
+  const { status } = statusObject;
+
+  const requestedData = await prisma.request.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!requestedData) {
+    return httpStatus.NOT_FOUND, "Provided request Id is not found";
+  }
+
+  const donorEmail = user.email;
+
+  const donorData = await prisma.user.findUnique({
+    where: {
+      email: donorEmail,
+    },
+  });
+
+  if (!donorData) {
+    return httpStatus.UNAUTHORIZED, "unauthorized error";
+  }
+
+  const donorId = donorData.id;
+
+  if (donorId !== requestedData.donorId) {
+    return httpStatus.UNAUTHORIZED, "unauthorized error";
+  }
+
+  const updateRequestStatus = await prisma.request.update({
     where: {
       id,
     },
     data: {
-      requestStatus: data,
+      requestStatus: status,
     },
   });
 
-  return result;
+  return updateRequestStatus;
 };
 
-export const donationService = {
-  getAllDonor,
-  createDonationRequest,
-  getAllDonationRequest,
-  updateRequestStatus,
+//Update my Requests
+const updateMyRequestForBlood = async (id: string, user: any, payload: any) => {
+  const loggedInUserId = user.userId;
+
+  const requestedData = await prisma.request.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!requestedData) {
+    return httpStatus.NOT_FOUND, "Provided request Id is not found";
+  }
+
+  if (loggedInUserId !== requestedData.requesterId) {
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED,
+      "You are not unauthorized to update",
+    );
+  }
+
+  let donorId = payload.donorId;
+
+  if (!payload.donorId) {
+    donorId = requestedData.donorId;
+  }
+
+  // const donorId = data.donorId;
+  const existingDonor = await prisma.user.findUnique({
+    where: {
+      id: donorId,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      bloodType: true,
+      location: true,
+      profilePicture: true,
+      totalDonations: true,
+      availability: true,
+      status: true,
+      userProfile: true,
+    },
+  });
+
+  if (!existingDonor) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Donor not found");
+  }
+
+  if (existingDonor.status !== "ACTIVE") {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Donor is inactive");
+  }
+
+  let bloodType = payload.bloodType;
+  if (!bloodType) {
+    bloodType = requestedData.bloodType;
+  }
+
+  if (existingDonor.bloodType !== bloodType) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      "Donor is not of the same blood type",
+    );
+  }
+
+  const updatedPayload = {
+    ...payload,
+    requestStatus: "PENDING",
+  };
+
+  const updateRequestForBlood = await prisma.request.update({
+    where: {
+      id,
+    },
+    data: updatedPayload,
+  });
+
+  return { ...updateRequestForBlood, donor: existingDonor };
+};
+
+//Delete my Blood Request
+const deleteMyRequest = async (id: string, user: any) => {
+  const loggedInUserId = user.userId;
+
+  const requestedData = await prisma.request.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  if (!requestedData) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      "Provided request Id is not found",
+    );
+  }
+
+  if (loggedInUserId !== requestedData.requesterId) {
+    throw new ApiError(
+      httpStatus.UNAUTHORIZED,
+      "You are not unauthorized to Delete",
+    );
+  }
+
+  const deleteRequest = await prisma.request.delete({
+    where: {
+      id,
+    },
+  });
+  return deleteRequest;
+};
+
+export const requestServices = {
+  createRequest,
+  myDonationRequests,
+  updateRequest,
+  donationRequestsMadeByMe,
+  updateMyRequestForBlood,
+  deleteMyRequest,
 };

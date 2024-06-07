@@ -1,36 +1,14 @@
-import { Request, Response } from "express";
-import catchAsync from "../../../shared/catchAsync";
-import { donationService } from "./request.service";
-import sendResponse from "../../../shared/sendResponse";
 import httpStatus from "http-status";
-import pick from "../../../shared/pick";
-import { donorFilterableFields } from "./request.constants";
+import sendResponse from "../../../shared/sendResponse";
+import { Request, Response } from "express";
+import { requestServices } from "./request.service";
+import catchAsync from "../../../shared/catchAsync";
+import { IAuthUser } from "../../interfaces/common";
 
-const getAllDonor = catchAsync(async (req: Request, res: Response) => {
-  // console.log(req.query)
-  const filters = pick(req.query, donorFilterableFields);
-  const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
-
-  const result = await donationService.getAllDonor(filters, options);
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Donors successfully found",
-    meta: result.meta,
-    data: result.data,
-  });
-});
-
-const createDonationRequest = catchAsync(
-  async (req: Request, res: Response) => {
-    const authorization: string = req.headers.authorization || "";
-    // console.log("token",  {authorization} );
-
-    const result = await donationService.createDonationRequest(
-      authorization,
-      req.body,
-    );
+const createRequest = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const user = req.user;
+    const result = await requestServices.createRequest(user, req.body);
 
     sendResponse(res, {
       statusCode: httpStatus.CREATED,
@@ -41,9 +19,10 @@ const createDonationRequest = catchAsync(
   },
 );
 
-const getAllDonationRequest = catchAsync(
-  async (req: Request, res: Response) => {
-    const result = await donationService.getAllDonationRequest();
+const myDonationRequests = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const user = req.user;
+    const result = await requestServices.myDonationRequests(user);
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
@@ -54,24 +33,77 @@ const getAllDonationRequest = catchAsync(
   },
 );
 
-const updateRequestStatus = catchAsync(async (req: Request, res: Response) => {
-  const status = req.body.status;
-  const params = req.params.requestId;
-  // console.log("params",params);
+//Donation requests made by me
+const donationRequestsMadeByMe = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const user = req.user;
+    const result = await requestServices.donationRequestsMadeByMe(user);
 
-  const result = await donationService.updateRequestStatus(params, status);
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "My donation request retrieved successfully",
+      data: result,
+    });
+  },
+);
 
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Donation request status successfully updated",
-    data: result,
-  });
-});
+const updateRequest = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const { id } = req.params;
+    const user = req.user;
+    const result = await requestServices.updateRequest(id, user, req.body);
 
-export const donationController = {
-  getAllDonor,
-  createDonationRequest,
-  getAllDonationRequest,
-  updateRequestStatus,
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Donation request status successfully updated",
+      data: result,
+    });
+  },
+);
+
+//Update My Request
+const updateMyRequest = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const { id } = req.params;
+    const user = req.user;
+    const result = await requestServices.updateMyRequestForBlood(
+      id,
+      user,
+      req.body,
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Successfully updated my donation request",
+      data: result,
+    });
+  },
+);
+
+//Delete My Request
+const deleteMyRequest = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const { id } = req.params;
+    const user = req.user;
+    const result = await requestServices.deleteMyRequest(id, user);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Successfully deleted my donation request",
+      data: result,
+    });
+  },
+);
+
+export const requestController = {
+  createRequest,
+  myDonationRequests,
+  updateRequest,
+  donationRequestsMadeByMe,
+  updateMyRequest,
+  deleteMyRequest,
 };
