@@ -5,6 +5,7 @@ import pick from "../../../shared/pick";
 import sendResponse from "../../../shared/sendResponse";
 import httpStatus from "http-status";
 import { userFilterableFields } from "./user.constant";
+import { IAuthUser } from "../../interfaces/common";
 
 const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
   const filters = pick(req.query, userFilterableFields);
@@ -33,6 +34,20 @@ const getByIdFromDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+//Partially updating user by admin
+const updateUserByAdmin = catchAsync(
+  async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const user = req.user as IAuthUser;
+    const result = await userServices.updateUserByAdmin(user, req.body);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "You have successfully updated",
+      data: result,
+    });
+  },
+);
 
 //Delete user
 const deleteUserController = catchAsync(async (req: Request, res: Response) => {
@@ -42,19 +57,7 @@ const deleteUserController = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "You have successfully deleted the user",
-    data: result,
-  });
-});
-
-//Partially updating user by admin
-const updateUserByAdmin = catchAsync(async (req: Request, res: Response) => {
-  const result = await userServices.updateUserByAdmin(req.body);
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "You have successfully updated the user",
+    message: "You have successfully deleted",
     data: result,
   });
 });
@@ -62,6 +65,6 @@ const updateUserByAdmin = catchAsync(async (req: Request, res: Response) => {
 export const userController = {
   getAllFromDB,
   getByIdFromDB,
-  deleteUserController,
   updateUserByAdmin,
+  deleteUserController,
 };

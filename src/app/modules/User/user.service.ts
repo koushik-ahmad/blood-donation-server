@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "../../../shared/prisma";
 import { IPaginationOptions } from "../../interfaces/IPaginationOptions";
@@ -106,6 +107,35 @@ const getByIdFromDB = async (id: string): Promise<User | null> => {
   return result;
 };
 
+// partial updating the user
+const updateUserByAdmin = async (user: any, data: any) => {
+  const userId = user.userId;
+  // Find the user
+  const findUser = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!findUser) {
+    throw new AppError(httpStatus.NOT_FOUND, "User is not found");
+  }
+
+  const userData = {
+    role: data.role,
+    status: data.status,
+  };
+
+  const updateUserData = await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: userData,
+  });
+
+  return updateUserData;
+};
+
 //Delete User
 const deleteUser = async (id: string) => {
   const userData = await prisma.user.findUnique({
@@ -130,39 +160,9 @@ const deleteUser = async (id: string) => {
   return deletedUser;
 };
 
-// partial updating the user
-const updateUserByAdmin = async (data: any) => {
-  const userId = data.id;
-
-  // Find the user
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-  });
-
-  if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, "User is not found");
-  }
-
-  const userData = {
-    role: data.role,
-    status: data.status,
-  };
-
-  const updateUserData = await prisma.user.update({
-    where: {
-      id: userId,
-    },
-    data: userData,
-  });
-
-  return updateUserData;
-};
-
 export const userServices = {
   getAllFromDB,
   getByIdFromDB,
-  deleteUser,
   updateUserByAdmin,
+  deleteUser,
 };

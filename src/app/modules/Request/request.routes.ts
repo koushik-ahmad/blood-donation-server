@@ -6,7 +6,7 @@ import { statusValidationSchema } from "./request.validation";
 
 const router = express.Router();
 
-router.get("/api/donor-list", donationController.getAllDonor);
+// router.get("/api/donor-list", donationController.getAllDonor);
 
 router.post(
   "/api/donation-request",

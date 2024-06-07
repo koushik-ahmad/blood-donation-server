@@ -11,19 +11,19 @@ router.get("/donor-list", userController.getAllFromDB);
 
 router.get("/donor-list/:id", userController.getByIdFromDB);
 
-//Delete User
-router.put(
-  "/donor/:id",
-  auth(UserRole.ADMIN),
-  userController.deleteUserController,
-);
-
 // Partially update user by admin
 router.put(
   "/update-user",
   auth(UserRole.ADMIN),
   validateRequest(userValidation.updateUserByAdmin),
   userController.updateUserByAdmin,
+);
+
+//Delete User
+router.delete(
+  "/donor/:id",
+  auth(UserRole.ADMIN),
+  userController.deleteUserController,
 );
 
 export const userRoutes = router;

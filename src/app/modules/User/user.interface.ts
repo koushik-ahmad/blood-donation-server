@@ -3,5 +3,4 @@ export type IUserFilterRequest = {
   email?: string | undefined;
   bloodType?: string | undefined;
   location?: string | undefined;
-  city?: string | undefined;
 };

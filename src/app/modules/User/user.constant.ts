@@ -2,6 +2,7 @@ export const userSearchAbleFields: string[] = [
   "email",
   "location",
   "name",
+  "availability",
 ]; // only for search term
 
 export const userFilterableFields: string[] = [
