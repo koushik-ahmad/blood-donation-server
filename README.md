@@ -4,7 +4,7 @@ Welcome to the backend repository of our Blood Donation Application, an online p
 
 ## Live URL
 
-[Blood Donation Application](https://blood-donation-eta.vercel.app/)
+[Blood Donation Application](https://blood-donation-server-phi.vercel.app/)
 
 ## Technology Stack
 
