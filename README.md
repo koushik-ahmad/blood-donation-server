@@ -96,4 +96,4 @@ Before you begin, ensure you have met the following requirements:
 
 If you have any questions or feedback, please reach out at:
 
-- **Email**: [koushikahmad@gmail.com](mailto:koushikahmad@gmail.com)
+- **Email**: [koushikahmad123@gmail.com](mailto:koushikahmad123@gmail.com)
