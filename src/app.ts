@@ -11,7 +11,7 @@ app.use(
   cors({
     origin: [
       "https://blood-donation-server-phi.vercel.app",
-      "http://localhost:5000",
+      "http://localhost:3000",
     ],
     credentials: true,
   }),
