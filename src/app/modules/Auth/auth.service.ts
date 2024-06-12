@@ -68,6 +68,7 @@ const loginUser = async (payload: { email: string; password: string }) => {
   const userData = await prisma.user.findUniqueOrThrow({
     where: {
       email: payload.email,
+      status: UserStatus.ACTIVE,
     },
   });
 
@@ -84,17 +85,26 @@ const loginUser = async (payload: { email: string; password: string }) => {
     {
       email: userData.email,
       userId: userData.id,
+      role: userData.role,
     },
     config.jwt.jwt_secret as Secret,
     config.jwt.expires_in as string,
   );
 
+  const refreshToken = jwtHelpers.generateToken(
+    {
+      email: userData.email,
+      role: userData.role,
+    },
+    config.jwt.refresh_token_secret as Secret,
+    config.jwt.refresh_token_expires_in as string,
+  );
+
   return {
-    id: userData.id,
-    name: userData.name,
-    email: userData.email,
-    role: userData.role,
-    token: accessToken,
+    accessToken,
+    refreshToken,
+    needPasswordChange: userData.needPasswordChange,
+    userData,
   };
 };
 
@@ -136,8 +146,46 @@ const changePassword = async (
   });
 };
 
+const refreshToken = async (token: string) => {
+  let decodedData;
+  try {
+    decodedData = jwtHelpers.verifyToken(
+      token,
+      config.jwt.refresh_token_secret as Secret,
+    );
+  } catch (err) {
+    throw new Error("You are not authorized!");
+  }
+
+  const userData = await prisma.user.findUnique({
+    where: {
+      email: decodedData.email,
+      status: UserStatus.ACTIVE,
+    },
+  });
+
+  if (!userData) {
+    throw new AppError(httpStatus.NOT_FOUND, "User does not exist");
+  }
+
+  const accessToken = jwtHelpers.generateToken(
+    {
+      email: userData.email,
+      role: userData.role,
+    },
+    config.jwt.jwt_secret as Secret,
+    config.jwt.expires_in as string,
+  );
+
+  return {
+    accessToken,
+    needPasswordChange: userData.needPasswordChange,
+  };
+};
+
 export const AuthService = {
   registerUser,
   loginUser,
   changePassword,
+  refreshToken,
 };

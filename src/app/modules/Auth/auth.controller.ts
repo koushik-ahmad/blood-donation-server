@@ -19,11 +19,28 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.loginUser(req.body);
 
+  const { refreshToken, accessToken } = result;
+
+  res.cookie("refreshToken", refreshToken, {
+    secure: false,
+    httpOnly: true,
+  });
+
+  res.cookie("accessToken", accessToken, {
+    secure: false,
+    httpOnly: true,
+  });
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "User logged in successfully",
-    data: result,
+    data: {
+      id: result.userData.id,
+      name: result.userData.name,
+      email: result.userData.email,
+      token: result.accessToken,
+    },
   });
 });
 
@@ -46,8 +63,26 @@ const changePassword = catchAsync(
   },
 );
 
+const refreshToken = catchAsync(async (req: Request, res: Response) => {
+  const { refreshToken } = req.cookies;
+
+  const result = await AuthService.refreshToken(refreshToken);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Access token generated successfully!",
+    data: result,
+    // data: {
+    //     accessToken: result.accessToken,
+    //     needPasswordChange: result.needPasswordChange
+    // }
+  });
+});
+
 export const AuthController = {
   registerUser,
   loginUser,
   changePassword,
+  refreshToken,
 };
