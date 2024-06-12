@@ -11,7 +11,7 @@ router.get("/donor-list", userController.getAllFromDB);
 
 router.get("/donor-list/:id", userController.getByIdFromDB);
 
-// Partially update user by admin
+// Partially update by admin
 router.put(
   "/update-user",
   auth(UserRole.ADMIN),

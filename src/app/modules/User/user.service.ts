@@ -108,8 +108,8 @@ const getByIdFromDB = async (id: string): Promise<User | null> => {
 };
 
 // partial updating the user
-const updateUserByAdmin = async (user: any, data: any) => {
-  const userId = user.userId;
+const updateUserByAdmin = async (data: any) => {
+  const userId = data.id;
   // Find the user
   const findUser = await prisma.user.findUnique({
     where: {
