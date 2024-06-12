@@ -39,9 +39,9 @@ const getAllFromDB = async (
     andConditions.push(...filterConditions);
   }
 
-  andConditions.push({
-    status: UserStatus.ACTIVE,
-  });
+  // andConditions.push({
+  //   status: UserStatus.ACTIVE,
+  // });
 
   const whereConditions: Prisma.UserWhereInput =
     andConditions.length > 0 ? { AND: andConditions } : {};
