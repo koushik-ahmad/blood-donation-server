@@ -20,7 +20,7 @@ router.put(
 );
 
 //Delete User
-router.delete(
+router.put(
   "/donor/:id",
   auth(UserRole.ADMIN),
   userController.deleteUserController,
