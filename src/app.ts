@@ -10,7 +10,7 @@ const app: Application = express();
 app.use(
   cors({
     origin: [
-      "https://blood-donation-server-phi.vercel.app",
+      "https://blood-donation-client-lemon.vercel.app",
       "http://localhost:3000",
     ],
     credentials: true,
