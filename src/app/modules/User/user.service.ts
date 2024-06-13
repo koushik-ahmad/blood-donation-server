@@ -40,7 +40,7 @@ const getAllFromDB = async (
   }
 
   andConditions.push({
-    status: UserStatus.ACTIVE && UserStatus.BLOCKED,
+    status: UserStatus.ACTIVE,
   });
 
   const whereConditions: Prisma.UserWhereInput =
@@ -153,7 +153,7 @@ const deleteUser = async (id: string) => {
       id,
     },
     data: {
-      status: UserStatus.DELETED,
+      email: UserStatus.DELETED,
     },
   });
 
