@@ -153,7 +153,7 @@ const deleteUser = async (id: string) => {
       id,
     },
     data: {
-      email: UserStatus.DELETED,
+      status: UserStatus.DELETED,
     },
   });
 

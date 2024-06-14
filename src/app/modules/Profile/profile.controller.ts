@@ -34,9 +34,9 @@ const updateMyProfile = catchAsync(
 
 const updateUserProfilePicture = catchAsync(
   async (req: Request, res: Response) => {
-    const authorization: string = req.headers.authorization || "";
+    // const authorization: string = req.headers.authorization || "";
     const result = await profileService.updateUserProfilePicture(
-      authorization,
+      // authorization,
       req.body,
     );
 

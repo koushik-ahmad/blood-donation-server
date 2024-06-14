@@ -25,6 +25,7 @@ const getMyProfile = async (token: any) => {
       bloodType: true,
       location: true,
       availability: true,
+      profilePicture: true,
       createdAt: true,
       updatedAt: true,
       userProfile: true,
@@ -130,17 +131,16 @@ const updateMyProfile = async (user: any, data: any) => {
 };
 
 // update user profile picture
-const updateUserProfilePicture = async (token: string, data: any) => {
-  const verifiedUser = jwtHelpers.verifyToken(
-    token,
-    config.jwt.jwt_secret as Secret,
-  );
-
-  const userId = verifiedUser.userId;
+const updateUserProfilePicture = async (data: any) => {
+  // const verifiedUser = jwtHelpers.verifyToken(
+  //   token,
+  //   config.jwt.jwt_secret as Secret,
+  // );
+  // const userId = verifiedUser.userId;
 
   const result = await prisma.user.update({
     where: {
-      id: userId,
+      id: data.id,
     },
     data: {
       profilePicture: data.profilePicture,
